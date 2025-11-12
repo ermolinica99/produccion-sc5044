@@ -401,6 +401,58 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
+# ============================================
+# SISTEMA DE AUTENTICACIÓN
+# ============================================
+
+# Credenciales (CAMBIA ESTAS CONTRASEÑAS)
+USUARIOS = {
+    "admin": "sc5044admin",
+    "produccion": "produccion2024",
+    "supervisor": "super2024"
+}
+
+# Verificar si el usuario está autenticado
+if 'autenticado' not in st.session_state:
+    st.session_state.autenticado = False
+
+# Si no está autenticado, mostrar login
+if not st.session_state.autenticado:
+    st.markdown('<div class="filter-container" style="max-width: 500px; margin: 100px auto;">', unsafe_allow_html=True)
+    st.markdown("### 🔐 Acceso Restringido")
+    st.markdown("Por favor, introduce tus credenciales para acceder al sistema")
+
+    usuario = st.text_input("👤 Usuario", key="login_usuario")
+    password = st.text_input("🔑 Contraseña", type="password", key="login_password")
+
+    col1, col2 = st.columns([1, 1])
+    with col1:
+        if st.button("🚀 Iniciar Sesión", use_container_width=True, type="primary"):
+            if usuario in USUARIOS and USUARIOS[usuario] == password:
+                st.session_state.autenticado = True
+                st.session_state.usuario = usuario
+                st.rerun()
+            else:
+                st.error("❌ Usuario o contraseña incorrectos")
+
+    with col2:
+        if st.button("❌ Cancelar", use_container_width=True):
+            st.stop()
+
+    st.markdown('</div>', unsafe_allow_html=True)
+    st.stop()  # Detener la ejecución aquí si no está autenticado
+
+# Mostrar botón de cerrar sesión
+col_logout1, col_logout2 = st.columns([6, 1])
+with col_logout2:
+    if st.button("🚪 Salir", use_container_width=True):
+        st.session_state.autenticado = False
+        st.session_state.usuario = None
+        st.rerun()
+
+st.markdown(f"👤 **Usuario:** {st.session_state.usuario}")
+st.markdown("---")
+
 # Cargar datos
 datos = cargar_datos()
 if datos is None:
