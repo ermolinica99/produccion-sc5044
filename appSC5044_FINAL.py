@@ -136,6 +136,33 @@ st.markdown("""
         box-shadow: 0 2px 6px rgba(111, 66, 193, 0.3);
         border: none;
     }
+    
+    /* Expander con fondo blanco y letras negras */
+    div[data-testid="stExpander"] {
+        background: white;
+        border-radius: 10px;
+        border: 2px solid #e0e0e0;
+        margin-bottom: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+    
+    .streamlit-expanderHeader {
+        background: white !important;
+        color: #212529 !important;
+        border-radius: 10px;
+        font-weight: 600;
+        padding: 16px 20px !important;
+    }
+    
+    .streamlit-expanderHeader:hover {
+        background: #f8f9fa !important;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+    }
+    
+    /* Icono del expander también negro */
+    .streamlit-expanderHeader svg {
+        fill: #212529 !important;
+    }
 </style>
 """, unsafe_allow_html=True)
 
