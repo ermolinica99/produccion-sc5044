@@ -333,6 +333,70 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 RUTA_JSON = "datos-produccion.json"
+RUTA_TEMPORAL = "fabricacion-temporal.json"
+
+
+# ============================================
+# FUNCIONES PARA FABRICACIÓN TEMPORAL
+# ============================================
+
+def cargar_fabricacion_temporal():
+    """Cargar datos de fabricación temporal"""
+    try:
+        if os.path.exists(RUTA_TEMPORAL):
+            with open(RUTA_TEMPORAL, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        return {}
+    except:
+        return {}
+
+
+def guardar_fabricacion_temporal(datos_temp):
+    """Guardar datos de fabricación temporal"""
+    try:
+        with open(RUTA_TEMPORAL, 'w', encoding='utf-8') as f:
+            json.dump(datos_temp, f, indent=2, ensure_ascii=False)
+        return True
+    except Exception as e:
+        st.error(f"Error al guardar fabricación: {str(e)}")
+        return False
+
+
+def registrar_fabricacion(ot, unidades, usuario):
+    """Registrar unidades fabricadas para una OT"""
+    datos_temp = cargar_fabricacion_temporal()
+
+    if ot not in datos_temp:
+        datos_temp[ot] = {
+            "unidades_fabricadas_total": 0,
+            "registros": []
+        }
+
+    # Agregar registro
+    datos_temp[ot]["unidades_fabricadas_total"] += unidades
+    datos_temp[ot]["registros"].append({
+        "fecha": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "unidades": unidades,
+        "usuario": usuario
+    })
+
+    return guardar_fabricacion_temporal(datos_temp)
+
+
+def obtener_unidades_fabricadas(ot):
+    """Obtener total de unidades fabricadas para una OT"""
+    datos_temp = cargar_fabricacion_temporal()
+    if ot in datos_temp:
+        return datos_temp[ot]["unidades_fabricadas_total"]
+    return 0
+
+
+def obtener_historial_fabricacion(ot):
+    """Obtener historial de fabricación de una OT"""
+    datos_temp = cargar_fabricacion_temporal()
+    if ot in datos_temp:
+        return datos_temp[ot]["registros"]
+    return []
 
 
 def convertir_fecha_excel(numero_serial):
@@ -649,10 +713,15 @@ else:
         for sku, grupo in sorted(grupos.items(), key=lambda x: x[1]['total_pendiente'], reverse=True):
             with st.expander(
                     f"📦 {sku} | {grupo['familia']} | {len(grupo['ots'])} OTs | {int(grupo['total_pendiente']):,} uds"):
-                for ot in grupo['ots']:
+                for idx, ot in enumerate(grupo['ots']):
+                    ot_numero = ot.get('OT', '-')
+                    pendiente_original = float(ot.get('PENDIENTE', 0))
+                    unidades_fabricadas = obtener_unidades_fabricadas(ot_numero)
+                    pendiente_real = max(0, pendiente_original - unidades_fabricadas)
+
                     col1, col2 = st.columns([1, 4])
                     with col1:
-                        st.markdown(f"**OT:** {ot.get('OT', '-')}")
+                        st.markdown(f"**OT:** {ot_numero}")
                         st.markdown(formatear_badge_tipo(ot.get('TIPO', 'STOCK')), unsafe_allow_html=True)
                     with col2:
                         c1, c2, c3, c4 = st.columns(4)
@@ -661,7 +730,10 @@ else:
                             st.write(ot.get('FECHA_PRODUCTO_FINAL', '-'))
                         with c2:
                             st.markdown("**📦 Pendiente:**")
-                            st.write(f"{int(ot.get('PENDIENTE', 0)):,} uds")
+                            if unidades_fabricadas > 0:
+                                st.write(f"~~{int(pendiente_original):,}~~ → **{int(pendiente_real):,}** uds")
+                            else:
+                                st.write(f"{int(pendiente_original):,} uds")
                         with c3:
                             st.markdown("**⏰ Atraso:**")
                             st.write(f"{ot.get('ATRASO', 0)} días")
@@ -669,6 +741,55 @@ else:
                             st.markdown("**🎨 Estado:**")
                             st.markdown(formatear_badge_estado(ot.get('CORTE_STATUS', 'naranja')),
                                         unsafe_allow_html=True)
+
+                    # FORMULARIO DE FABRICACIÓN (Solo para usuario "produccion" o "admin")
+                    if st.session_state.usuario in ["produccion", "admin"]:
+                        st.markdown("---")
+                        st.markdown("### 🏭 Registrar Fabricación")
+
+                        col_form1, col_form2, col_form3 = st.columns([2, 1, 1])
+
+                        with col_form1:
+                            unidades_key = f"unidades_{ot_numero}_{idx}"
+                            unidades_fabricar = st.number_input(
+                                "Unidades fabricadas:",
+                                min_value=0,
+                                max_value=int(pendiente_real),
+                                value=0,
+                                step=1,
+                                key=unidades_key
+                            )
+
+                        with col_form2:
+                            if st.button(f"✅ Registrar", key=f"btn_registrar_{ot_numero}_{idx}",
+                                         use_container_width=True):
+                                if unidades_fabricar > 0:
+                                    if registrar_fabricacion(ot_numero, unidades_fabricar, st.session_state.usuario):
+                                        st.success(f"✅ {unidades_fabricar} uds registradas correctamente")
+                                        st.rerun()
+                                    else:
+                                        st.error("❌ Error al registrar")
+                                else:
+                                    st.warning("⚠️ Debes ingresar unidades mayores a 0")
+
+                        with col_form3:
+                            historial = obtener_historial_fabricacion(ot_numero)
+                            if historial:
+                                if st.button(f"📜 Historial ({len(historial)})", key=f"btn_historial_{ot_numero}_{idx}",
+                                             use_container_width=True):
+                                    st.session_state[f"mostrar_historial_{ot_numero}"] = not st.session_state.get(
+                                        f"mostrar_historial_{ot_numero}", False)
+
+                        # Mostrar historial si está activado
+                        if st.session_state.get(f"mostrar_historial_{ot_numero}", False):
+                            st.markdown("#### 📜 Historial de Fabricación")
+                            for reg in reversed(historial):
+                                st.markdown(f"- **{reg['fecha']}** - {reg['unidades']} uds por *{reg['usuario']}*")
+
+                        # Info para fabricadas
+                        if unidades_fabricadas > 0:
+                            st.info(f"ℹ️ Total fabricado (temporal): **{int(unidades_fabricadas):,}** uds")
+
                     st.markdown("---")
 
 st.caption("SC5044 Production Management")
