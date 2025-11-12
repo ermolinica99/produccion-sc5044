@@ -416,15 +416,6 @@ if 'vista' not in st.session_state:
 # ESTADÍSTICAS
 # ============================================
 
-# Aplicar filtros para estadísticas
-estado_corte = st.session_state.get('estado_corte', 'Todos')
-urgencia = st.session_state.get('urgencia', 'Todas')
-tipo = st.session_state.get('tipo', 'Todos')
-familia = st.session_state.get('familia', 'Todas')
-busqueda = st.session_state.get('busqueda', '')
-
-datos_filtrados = aplicar_filtros(datos, st.session_state.prioridad, estado_corte, urgencia, tipo, familia, busqueda)
-
 total_ots = len(datos_filtrados)
 total_pendiente = int(sum(float(item.get('PENDIENTE', 0)) for item in datos_filtrados))
 urgencias_count = len([item for item in datos_filtrados if item.get('URGENCIA') == 1])
@@ -503,6 +494,9 @@ with col4:
 # Búsqueda
 busqueda = st.text_input("🔍 Buscar por OT, SKU o descripción...", key="busqueda")
 
+# Aplicar filtros DESPUÉS de obtener todos los valores
+datos_filtrados = aplicar_filtros(datos, st.session_state.prioridad, estado_corte, urgencia, tipo, familia, busqueda)
+
 # Botones de acción
 col1, col2, col3, col4 = st.columns(4)
 
@@ -513,11 +507,6 @@ with col1:
 with col2:
     if st.button("🔄 Limpiar Filtros", use_container_width=True):
         st.session_state.prioridad = "Todas"
-        st.session_state.estado_corte = "Todos"
-        st.session_state.urgencia = "Todas"
-        st.session_state.tipo = "Todos"
-        st.session_state.familia = "Todas"
-        st.session_state.busqueda = ""
         st.rerun()
 
 with col3:
@@ -608,33 +597,37 @@ else:
                 f"📦 {sku} | {grupo['familia']} | {len(grupo['ots'])} OT{'s' if len(grupo['ots']) != 1 else ''} | {int(grupo['total_pendiente']):,} unidades"
             ):
                 for ot in grupo['ots']:
-                    # Título de la OT con descripción
-                    st.markdown(f"### 🏷️ {ot.get('DESCRIPCION', 'Sin descripción')}")
+                    # Encabezado con información clave
+                    col_ot, col_tipo = st.columns([3, 1])
                     
-                    col1, col2 = st.columns([1, 3])
+                    with col_ot:
+                        st.markdown(f"### 📋 OT: **{ot.get('OT', '-')}**")
+                    
+                    with col_tipo:
+                        st.markdown(f"{formatear_badge_tipo(ot.get('TIPO', 'STOCK'))}", unsafe_allow_html=True)
+                    
+                    # Información en grid
+                    col1, col2, col3, col4, col5 = st.columns(5)
                     
                     with col1:
-                        st.markdown(f"**OT:** {ot.get('OT', '-')}")
-                        st.markdown(f"**Tipo:** {formatear_badge_tipo(ot.get('TIPO', 'STOCK'))}", unsafe_allow_html=True)
+                        st.markdown(f"**📅 Fecha Final:**")
+                        st.write(ot.get('FECHA_PRODUCTO_FINAL', '-'))
                     
                     with col2:
-                        subcol1, subcol2, subcol3, subcol4 = st.columns(4)
-                        
-                        with subcol1:
-                            st.markdown(f"**📅 Fecha Final:**")
-                            st.write(ot.get('FECHA_PRODUCTO_FINAL', '-'))
-                        
-                        with subcol2:
-                            st.markdown(f"**📦 Pendiente:**")
-                            st.write(f"{int(ot.get('PENDIENTE', 0)):,} uds")
-                        
-                        with subcol3:
-                            st.markdown(f"**⏰ Atraso:**")
-                            st.write(f"{ot.get('ATRASO', 0)} días")
-                        
-                        with subcol4:
-                            st.markdown(f"**🎨 Estado Corte:**")
-                            st.markdown(formatear_badge_estado(ot.get('CORTE_STATUS', 'naranja')), unsafe_allow_html=True)
+                        st.markdown(f"**📅 Fecha Cosido:**")
+                        st.write(ot.get('FECHA_COSIDO', '-'))
+                    
+                    with col3:
+                        st.markdown(f"**📦 Pendiente:**")
+                        st.write(f"{int(ot.get('PENDIENTE', 0)):,} uds")
+                    
+                    with col4:
+                        st.markdown(f"**⏰ Atraso:**")
+                        st.write(f"{ot.get('ATRASO', 0)} días")
+                    
+                    with col5:
+                        st.markdown(f"**🎨 Estado Corte:**")
+                        st.markdown(formatear_badge_estado(ot.get('CORTE_STATUS', 'naranja')), unsafe_allow_html=True)
                     
                     st.markdown("---")
 
