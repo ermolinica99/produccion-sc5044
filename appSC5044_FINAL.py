@@ -12,22 +12,37 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# CSS PERSONALIZADO MEJORADO - Diseño Moderno
+# CSS PERSONALIZADO MEJORADO - Diseño Moderno (Forzar tema claro)
 st.markdown("""
 <style>
+    /* FORZAR TEMA CLARO - Ignorar tema oscuro del sistema */
+    [data-testid="stAppViewContainer"] {
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%) !important;
+    }
+
+    [data-testid="stHeader"] {
+        background: transparent !important;
+    }
+
+    /* Forzar colores claros en todos los textos */
+    .stMarkdown, .stText, p, span, div, h1, h2, h3, h4, h5, h6, label {
+        color: #2d3436 !important;
+    }
+
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     header {visibility: hidden;}
 
     /* Fondo degradado suave y elegante */
     .stApp {
-        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%) !important;
     }
 
     .main .block-container {
         padding-top: 2rem;
         padding-bottom: 2rem;
         max-width: 95%;
+        background: transparent !important;
     }
 
     /* Header moderno con sombra suave */
@@ -133,29 +148,45 @@ st.markdown("""
         box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4) !important;
     }
 
-    /* Select boxes modernos */
+    /* Select boxes modernos - FORZAR FONDO BLANCO */
     div[data-baseweb="select"] {
         border-radius: 12px !important;
         border: 2px solid #e8ecf1 !important;
         transition: all 0.3s ease;
+        background: white !important;
     }
 
     div[data-baseweb="select"]:hover {
         border-color: #667eea !important;
     }
 
-    /* Input moderno */
+    /* Forzar texto negro en selects */
+    div[data-baseweb="select"] > div {
+        background: white !important;
+        color: #2d3436 !important;
+    }
+
+    /* Input moderno - FORZAR FONDO BLANCO */
     .stTextInput input {
         border-radius: 12px !important;
         border: 2px solid #e8ecf1 !important;
         padding: 14px 18px !important;
         font-size: 15px !important;
         transition: all 0.3s ease;
+        background: white !important;
+        color: #2d3436 !important;
     }
 
     .stTextInput input:focus {
         border-color: #667eea !important;
         box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1) !important;
+        background: white !important;
+    }
+
+    /* Forzar labels en modo claro */
+    .stTextInput label, .stSelectbox label {
+        color: #2d3436 !important;
+        font-weight: 600 !important;
     }
 
     /* Badges premium */
@@ -228,10 +259,45 @@ st.markdown("""
         fill: #667eea !important;
     }
 
-    /* Dataframe mejorado */
+    /* Dataframe mejorado - FORZAR MODO CLARO */
     .dataframe {
         font-size: 14px !important;
         border-radius: 12px !important;
+        background: white !important;
+    }
+
+    /* Forzar encabezados de tabla en blanco */
+    .dataframe thead tr {
+        background: #f8f9fa !important;
+    }
+
+    .dataframe thead th {
+        background: #f8f9fa !important;
+        color: #2d3436 !important;
+        font-weight: 700 !important;
+    }
+
+    /* Forzar filas de tabla en blanco */
+    .dataframe tbody tr {
+        background: white !important;
+    }
+
+    .dataframe tbody tr:hover {
+        background: #f8f9ff !important;
+    }
+
+    .dataframe tbody td {
+        color: #2d3436 !important;
+        background: white !important;
+    }
+
+    /* Forzar todos los elementos de streamlit en blanco */
+    [data-testid="stDataFrame"] {
+        background: white !important;
+    }
+
+    [data-testid="stDataFrame"] * {
+        color: #2d3436 !important;
     }
 
     /* Scrollbar personalizado */
