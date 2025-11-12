@@ -18,17 +18,17 @@ st.markdown("""
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     header {visibility: hidden;}
-    
+
     .stApp {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     }
-    
+
     .main .block-container {
         padding-top: 2rem;
         padding-bottom: 2rem;
         max-width: 95%;
     }
-    
+
     .custom-header {
         background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
         color: white;
@@ -37,19 +37,19 @@ st.markdown("""
         margin-bottom: 0;
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
     }
-    
+
     .custom-header h1 {
         font-size: 28px;
         font-weight: 600;
         margin: 0 0 10px 0;
     }
-    
+
     .custom-header p {
         opacity: 0.9;
         font-size: 14px;
         margin: 0;
     }
-    
+
     .stat-card {
         background: white;
         padding: 24px 20px;
@@ -63,12 +63,12 @@ st.markdown("""
         justify-content: center;
         align-items: center;
     }
-    
+
     .stat-card:hover {
         transform: translateY(-4px);
         box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
     }
-    
+
     .stat-card h3 {
         font-size: 12px;
         color: #6c757d;
@@ -77,7 +77,7 @@ st.markdown("""
         letter-spacing: 0.5px;
         font-weight: 600;
     }
-    
+
     .stat-card .value {
         font-size: 36px;
         font-weight: 700;
@@ -85,7 +85,7 @@ st.markdown("""
         margin: 0;
         line-height: 1;
     }
-    
+
     .filter-container {
         background: white;
         padding: 30px 40px;
@@ -93,7 +93,7 @@ st.markdown("""
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
         margin-bottom: 20px;
     }
-    
+
     .badge {
         display: inline-block;
         padding: 6px 14px;
@@ -104,39 +104,39 @@ st.markdown("""
         letter-spacing: 0.3px;
         white-space: nowrap;
     }
-    
+
     .badge-naranja {
         background: #fff3cd;
         color: #856404;
         border: 1px solid #ffeaa7;
     }
-    
+
     .badge-verde {
         background: #d4edda;
         color: #155724;
         border: 1px solid #c3e6cb;
     }
-    
+
     .badge-rojo {
         background: #f8d7da;
         color: #721c24;
         border: 1px solid #f5c6cb;
     }
-    
+
     .badge-stock {
         background: #007bff;
         color: white;
         box-shadow: 0 2px 6px rgba(0, 123, 255, 0.3);
         border: none;
     }
-    
+
     .badge-personalizado {
         background: #6f42c1;
         color: white;
         box-shadow: 0 2px 6px rgba(111, 66, 193, 0.3);
         border: none;
     }
-    
+
     /* Expander con fondo blanco y letras negras */
     div[data-testid="stExpander"] {
         background: white;
@@ -145,7 +145,7 @@ st.markdown("""
         margin-bottom: 12px;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
     }
-    
+
     .streamlit-expanderHeader {
         background: white !important;
         color: #212529 !important;
@@ -153,12 +153,12 @@ st.markdown("""
         font-weight: 600;
         padding: 16px 20px !important;
     }
-    
+
     .streamlit-expanderHeader:hover {
         background: #f8f9fa !important;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
     }
-    
+
     /* Icono del expander también negro */
     .streamlit-expanderHeader svg {
         fill: #212529 !important;
@@ -167,6 +167,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 RUTA_JSON = "datos-produccion.json"
+
 
 def convertir_fecha_excel(numero_serial):
     try:
@@ -179,6 +180,7 @@ def convertir_fecha_excel(numero_serial):
     except (ValueError, TypeError):
         return str(numero_serial)
 
+
 def parsear_fecha(fechaStr):
     if not fechaStr:
         return None
@@ -190,11 +192,13 @@ def parsear_fecha(fechaStr):
     except:
         return None
 
+
 def obtener_lunes_de_semana(fecha):
     d = datetime(fecha.year, fecha.month, fecha.day) if isinstance(fecha, datetime) else fecha
     dia = d.weekday()
     lunes = d - timedelta(days=dia)
     return lunes.replace(hour=0, minute=0, second=0, microsecond=0)
+
 
 def calcular_prioridad(fechaStr):
     fecha = parsear_fecha(fechaStr)
@@ -207,7 +211,7 @@ def calcular_prioridad(fechaStr):
     domingo_esta_semana = lunes_esta_semana + timedelta(days=6, hours=23, minutes=59, seconds=59)
     domingo_proxima_semana = lunes_proxima_semana + timedelta(days=6, hours=23, minutes=59, seconds=59)
     domingo_semana_3 = lunes_semana_3 + timedelta(days=6, hours=23, minutes=59, seconds=59)
-    
+
     if lunes_esta_semana <= fecha <= domingo_esta_semana:
         return 1
     elif lunes_proxima_semana <= fecha <= domingo_proxima_semana:
@@ -215,6 +219,7 @@ def calcular_prioridad(fechaStr):
     elif lunes_semana_3 <= fecha <= domingo_semana_3:
         return 3
     return None
+
 
 def procesar_datos(datos):
     for item in datos:
@@ -231,7 +236,7 @@ def procesar_datos(datos):
         item['PRIORIDAD_SEMANA'] = calcular_prioridad(item['FECHA_PRODUCTO_FINAL'])
     return datos
 
-@st.cache_data
+
 def cargar_datos():
     try:
         if not os.path.exists(RUTA_JSON):
@@ -244,13 +249,16 @@ def cargar_datos():
         st.error(f"❌ Error al cargar datos: {str(e)}")
         return None
 
+
 def aplicar_filtros(datos, prioridad, estado_corte, urgencia, tipo, familia, busqueda):
     datos_filtrados = datos.copy()
-    if prioridad != "Todas":
+    # Filtrar por prioridad (solo 1, 2 o 3)
+    if prioridad in ["1", "2", "3"]:
         prioridad_num = int(prioridad)
         datos_filtrados = [item for item in datos_filtrados if item.get('PRIORIDAD_SEMANA') == prioridad_num]
     if estado_corte != "Todos":
-        datos_filtrados = [item for item in datos_filtrados if item.get('CORTE_STATUS', '').lower() == estado_corte.lower()]
+        datos_filtrados = [item for item in datos_filtrados if
+                           item.get('CORTE_STATUS', '').lower() == estado_corte.lower()]
     if urgencia != "Todas":
         urgencia_num = int(urgencia.split()[0])
         datos_filtrados = [item for item in datos_filtrados if item.get('URGENCIA') == urgencia_num]
@@ -263,12 +271,13 @@ def aplicar_filtros(datos, prioridad, estado_corte, urgencia, tipo, familia, bus
         datos_filtrados = [
             item for item in datos_filtrados
             if busqueda in str(item.get('OT', '')).lower()
-            or busqueda in str(item.get('SKU', '')).lower()
-            or busqueda in str(item.get('DESCRIPCION', '')).lower()
-            or busqueda in str(item.get('FAMILIA', '')).lower()
+               or busqueda in str(item.get('SKU', '')).lower()
+               or busqueda in str(item.get('DESCRIPCION', '')).lower()
+               or busqueda in str(item.get('FAMILIA', '')).lower()
         ]
     datos_filtrados.sort(key=lambda x: parsear_fecha(x.get('FECHA_PRODUCTO_FINAL', '')) or datetime.max)
     return datos_filtrados
+
 
 def formatear_badge_estado(estado):
     if not estado:
@@ -276,11 +285,13 @@ def formatear_badge_estado(estado):
     estado_lower = estado.lower()
     return f'<span class="badge badge-{estado_lower}">{estado.upper()}</span>'
 
+
 def formatear_badge_tipo(tipo):
     if tipo == "STOCK":
         return '<span class="badge badge-stock">STOCK</span>'
     else:
         return '<span class="badge badge-personalizado">PERSONALIZADO</span>'
+
 
 # Header
 st.markdown("""
@@ -298,7 +309,7 @@ if datos is None:
 familias = ["Todas"] + sorted(list(set([item.get('FAMILIA', '') for item in datos if item.get('FAMILIA')])))
 
 if 'prioridad' not in st.session_state:
-    st.session_state.prioridad = "Todas"
+    st.session_state.prioridad = "1"
 if 'vista' not in st.session_state:
     st.session_state.vista = "Tabla"
 
@@ -306,21 +317,20 @@ if 'vista' not in st.session_state:
 st.markdown('<div class="filter-container">', unsafe_allow_html=True)
 st.markdown("### 📅 Filtrar por Prioridad de Semana")
 
-col1, col2, col3, col4 = st.columns(4)
+col1, col2, col3 = st.columns(3)
 with col1:
-    if st.button("📋 TODAS", use_container_width=True, type="primary" if st.session_state.prioridad == "Todas" else "secondary"):
-        st.session_state.prioridad = "Todas"
-        st.rerun()
-with col2:
-    if st.button("🔴 PRIORIDAD 1", use_container_width=True, type="primary" if st.session_state.prioridad == "1" else "secondary"):
+    if st.button("🔴 PRIORIDAD 1", use_container_width=True,
+                 type="primary" if st.session_state.prioridad == "1" else "secondary"):
         st.session_state.prioridad = "1"
         st.rerun()
-with col3:
-    if st.button("🟠 PRIORIDAD 2", use_container_width=True, type="primary" if st.session_state.prioridad == "2" else "secondary"):
+with col2:
+    if st.button("🟠 PRIORIDAD 2", use_container_width=True,
+                 type="primary" if st.session_state.prioridad == "2" else "secondary"):
         st.session_state.prioridad = "2"
         st.rerun()
-with col4:
-    if st.button("🟡 PRIORIDAD 3", use_container_width=True, type="primary" if st.session_state.prioridad == "3" else "secondary"):
+with col3:
+    if st.button("🟡 PRIORIDAD 3", use_container_width=True,
+                 type="primary" if st.session_state.prioridad == "3" else "secondary"):
         st.session_state.prioridad = "3"
         st.rerun()
 
@@ -347,17 +357,19 @@ with col1:
     st.button("🔍 Aplicar Filtros", use_container_width=True, type="primary")
 with col2:
     if st.button("🔄 Limpiar", use_container_width=True):
-        st.session_state.prioridad = "Todas"
+        st.session_state.prioridad = "1"
         st.rerun()
 with col3:
-    if st.button("📦 Vista Agrupada" if st.session_state.vista == "Tabla" else "📋 Vista Tabla", use_container_width=True):
+    if st.button("📦 Vista Agrupada" if st.session_state.vista == "Tabla" else "📋 Vista Tabla",
+                 use_container_width=True):
         st.session_state.vista = "Agrupada" if st.session_state.vista == "Tabla" else "Tabla"
         st.rerun()
 with col4:
     if len(datos_filtrados) > 0:
         df = pd.DataFrame(datos_filtrados)
         csv = df.to_csv(index=False).encode('utf-8-sig')
-        st.download_button("📥 Exportar", csv, f"produccion_{datetime.now().strftime('%Y%m%d')}.csv", "text/csv", use_container_width=True)
+        st.download_button("📥 Exportar", csv, f"produccion_{datetime.now().strftime('%Y%m%d')}.csv", "text/csv",
+                           use_container_width=True)
 
 st.markdown('</div>', unsafe_allow_html=True)
 
@@ -415,9 +427,10 @@ else:
                 grupos[sku] = {'familia': item.get('FAMILIA', '-'), 'ots': [], 'total_pendiente': 0}
             grupos[sku]['ots'].append(item)
             grupos[sku]['total_pendiente'] += float(item.get('PENDIENTE', 0))
-        
+
         for sku, grupo in sorted(grupos.items(), key=lambda x: x[1]['total_pendiente'], reverse=True):
-            with st.expander(f"📦 {sku} | {grupo['familia']} | {len(grupo['ots'])} OTs | {int(grupo['total_pendiente']):,} uds"):
+            with st.expander(
+                    f"📦 {sku} | {grupo['familia']} | {len(grupo['ots'])} OTs | {int(grupo['total_pendiente']):,} uds"):
                 for ot in grupo['ots']:
                     col1, col2 = st.columns([1, 4])
                     with col1:
@@ -436,7 +449,8 @@ else:
                             st.write(f"{ot.get('ATRASO', 0)} días")
                         with c4:
                             st.markdown("**🎨 Estado:**")
-                            st.markdown(formatear_badge_estado(ot.get('CORTE_STATUS', 'naranja')), unsafe_allow_html=True)
+                            st.markdown(formatear_badge_estado(ot.get('CORTE_STATUS', 'naranja')),
+                                        unsafe_allow_html=True)
                     st.markdown("---")
 
 st.caption("SC5044 Production Management")
