@@ -12,15 +12,16 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# CSS PERSONALIZADO MEJORADO
+# CSS PERSONALIZADO MEJORADO - Diseño Moderno
 st.markdown("""
 <style>
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     header {visibility: hidden;}
 
+    /* Fondo degradado suave y elegante */
     .stApp {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
     }
 
     .main .block-container {
@@ -29,139 +30,238 @@ st.markdown("""
         max-width: 95%;
     }
 
+    /* Header moderno con sombra suave */
     .custom-header {
-        background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         color: white;
-        padding: 30px 40px;
-        border-radius: 16px 16px 0 0;
+        padding: 40px 50px;
+        border-radius: 20px 20px 0 0;
         margin-bottom: 0;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        box-shadow: 0 10px 40px rgba(102, 126, 234, 0.3);
     }
 
     .custom-header h1 {
-        font-size: 28px;
-        font-weight: 600;
+        font-size: 32px;
+        font-weight: 700;
         margin: 0 0 10px 0;
+        letter-spacing: -0.5px;
     }
 
     .custom-header p {
-        opacity: 0.9;
-        font-size: 14px;
+        opacity: 0.95;
+        font-size: 16px;
         margin: 0;
+        font-weight: 300;
     }
 
+    /* Tarjetas de estadísticas premium */
     .stat-card {
         background: white;
-        padding: 24px 20px;
-        border-radius: 12px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        padding: 30px 25px;
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
         text-align: center;
-        transition: all 0.3s ease;
-        min-height: 120px;
+        transition: all 0.4s ease;
+        min-height: 140px;
         display: flex;
         flex-direction: column;
         justify-content: center;
         align-items: center;
+        border: 1px solid rgba(255, 255, 255, 0.8);
     }
 
     .stat-card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+        transform: translateY(-8px);
+        box-shadow: 0 12px 35px rgba(102, 126, 234, 0.2);
+        border-color: #667eea;
     }
 
     .stat-card h3 {
-        font-size: 12px;
-        color: #6c757d;
-        margin: 0 0 12px 0;
+        font-size: 11px;
+        color: #8b95a5;
+        margin: 0 0 15px 0;
         text-transform: uppercase;
-        letter-spacing: 0.5px;
-        font-weight: 600;
+        letter-spacing: 1px;
+        font-weight: 700;
     }
 
     .stat-card .value {
-        font-size: 36px;
-        font-weight: 700;
-        color: #2575fc;
+        font-size: 42px;
+        font-weight: 800;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
         margin: 0;
         line-height: 1;
     }
 
+    /* Contenedor de filtros elegante */
     .filter-container {
         background: white;
-        padding: 30px 40px;
-        border-radius: 0 0 16px 16px;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-        margin-bottom: 20px;
+        padding: 35px 50px;
+        border-radius: 0 0 20px 20px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+        margin-bottom: 30px;
+        border-top: 3px solid #667eea;
     }
 
+    /* Botones mejorados */
+    .stButton button {
+        border-radius: 12px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        border: 2px solid transparent;
+        padding: 12px 24px;
+        font-size: 14px;
+    }
+
+    .stButton button:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+    }
+
+    /* Botones primarios con gradiente */
+    button[kind="primary"] {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+        color: white !important;
+        border: none !important;
+    }
+
+    button[kind="primary"]:hover {
+        background: linear-gradient(135deg, #764ba2 0%, #667eea 100%) !important;
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4) !important;
+    }
+
+    /* Select boxes modernos */
+    div[data-baseweb="select"] {
+        border-radius: 12px !important;
+        border: 2px solid #e8ecf1 !important;
+        transition: all 0.3s ease;
+    }
+
+    div[data-baseweb="select"]:hover {
+        border-color: #667eea !important;
+    }
+
+    /* Input moderno */
+    .stTextInput input {
+        border-radius: 12px !important;
+        border: 2px solid #e8ecf1 !important;
+        padding: 14px 18px !important;
+        font-size: 15px !important;
+        transition: all 0.3s ease;
+    }
+
+    .stTextInput input:focus {
+        border-color: #667eea !important;
+        box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1) !important;
+    }
+
+    /* Badges premium */
     .badge {
         display: inline-block;
-        padding: 6px 14px;
-        border-radius: 20px;
+        padding: 8px 16px;
+        border-radius: 25px;
         font-size: 11px;
-        font-weight: 600;
+        font-weight: 700;
         text-transform: uppercase;
-        letter-spacing: 0.3px;
+        letter-spacing: 0.5px;
         white-space: nowrap;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     }
 
     .badge-naranja {
-        background: #fff3cd;
-        color: #856404;
-        border: 1px solid #ffeaa7;
+        background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
+        color: #d63031;
     }
 
     .badge-verde {
-        background: #d4edda;
-        color: #155724;
-        border: 1px solid #c3e6cb;
+        background: linear-gradient(135deg, #55efc4 0%, #00b894 100%);
+        color: #00441b;
     }
 
     .badge-rojo {
-        background: #f8d7da;
-        color: #721c24;
-        border: 1px solid #f5c6cb;
+        background: linear-gradient(135deg, #ff7675 0%, #d63031 100%);
+        color: white;
     }
 
     .badge-stock {
-        background: #007bff;
+        background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%);
         color: white;
-        box-shadow: 0 2px 6px rgba(0, 123, 255, 0.3);
-        border: none;
     }
 
     .badge-personalizado {
-        background: #6f42c1;
+        background: linear-gradient(135deg, #a29bfe 0%, #6c5ce7 100%);
         color: white;
-        box-shadow: 0 2px 6px rgba(111, 66, 193, 0.3);
-        border: none;
     }
 
-    /* Expander con fondo blanco y letras negras */
+    /* Expander premium */
     div[data-testid="stExpander"] {
         background: white;
-        border-radius: 10px;
-        border: 2px solid #e0e0e0;
-        margin-bottom: 12px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        border-radius: 16px;
+        border: 2px solid #e8ecf1;
+        margin-bottom: 16px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        transition: all 0.3s ease;
+    }
+
+    div[data-testid="stExpander"]:hover {
+        border-color: #667eea;
+        box-shadow: 0 6px 25px rgba(102, 126, 234, 0.15);
     }
 
     .streamlit-expanderHeader {
         background: white !important;
-        color: #212529 !important;
-        border-radius: 10px;
-        font-weight: 600;
-        padding: 16px 20px !important;
+        color: #2d3436 !important;
+        border-radius: 16px;
+        font-weight: 700;
+        padding: 20px 24px !important;
+        font-size: 15px;
     }
 
     .streamlit-expanderHeader:hover {
-        background: #f8f9fa !important;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+        background: linear-gradient(135deg, #f8f9ff 0%, #f0f2ff 100%) !important;
     }
 
-    /* Icono del expander también negro */
     .streamlit-expanderHeader svg {
-        fill: #212529 !important;
+        fill: #667eea !important;
+    }
+
+    /* Dataframe mejorado */
+    .dataframe {
+        font-size: 14px !important;
+        border-radius: 12px !important;
+    }
+
+    /* Scrollbar personalizado */
+    ::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: #f1f3f5;
+        border-radius: 10px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 10px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+    }
+
+    /* Animación suave al cargar */
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .stat-card, .filter-container, div[data-testid="stExpander"] {
+        animation: fadeIn 0.6s ease-out;
     }
 </style>
 """, unsafe_allow_html=True)
