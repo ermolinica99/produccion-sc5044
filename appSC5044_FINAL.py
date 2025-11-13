@@ -399,6 +399,26 @@ def obtener_historial_fabricacion(ot):
     return []
 
 
+def eliminar_fabricacion_temporal():
+    """Eliminar el archivo de fabricación temporal"""
+    try:
+        if os.path.exists(RUTA_TEMPORAL):
+            os.remove(RUTA_TEMPORAL)
+            return True
+        return True
+    except Exception as e:
+        st.error(f"Error al eliminar: {str(e)}")
+        return False
+
+
+def obtener_estadisticas_fabricacion():
+    """Obtener estadísticas generales de fabricación temporal"""
+    datos_temp = cargar_fabricacion_temporal()
+    total_ots = len(datos_temp)
+    total_unidades = sum(item["unidades_fabricadas_total"] for item in datos_temp.values())
+    return total_ots, total_unidades
+
+
 def convertir_fecha_excel(numero_serial):
     try:
         if numero_serial == "" or numero_serial is None:
@@ -581,6 +601,39 @@ with col_logout2:
         st.rerun()
 
 st.markdown(f"👤 **Usuario:** {st.session_state.usuario}")
+
+# PANEL DE CONTROL ADMIN
+if st.session_state.usuario == "admin":
+    st.markdown("---")
+    st.markdown("### 🔧 Panel de Administración")
+
+    datos_temp = cargar_fabricacion_temporal()
+    if datos_temp:
+        total_ots_fab, total_uds_fab = obtener_estadisticas_fabricacion()
+
+        col_admin1, col_admin2, col_admin3 = st.columns(3)
+
+        with col_admin1:
+            st.info(f"📦 **{total_ots_fab}** OTs con fabricación registrada")
+
+        with col_admin2:
+            st.info(f"✅ **{total_uds_fab:,}** unidades fabricadas (temporal)")
+
+        with col_admin3:
+            if st.button("🗑️ Eliminar Datos Temporales", use_container_width=True, type="primary"):
+                if eliminar_fabricacion_temporal():
+                    st.success("✅ Datos temporales eliminados correctamente")
+                    st.rerun()
+                else:
+                    st.error("❌ Error al eliminar")
+
+        with st.expander("📊 Ver detalle de fabricaciones"):
+            for ot, datos in datos_temp.items():
+                st.markdown(
+                    f"**OT {ot}:** {datos['unidades_fabricadas_total']} uds - {len(datos['registros'])} registros")
+    else:
+        st.success("✅ No hay datos temporales de fabricación")
+
 st.markdown("---")
 
 # Cargar datos
