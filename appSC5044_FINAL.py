@@ -482,14 +482,58 @@ def calcular_prioridad(fechaStr):
     return None
 
 
+def calcular_atraso_por_cosido(fecha_cosido_str):
+    """Calcula el atraso en días basándose en FECHA_COSIDO"""
+    fecha_cosido = parsear_fecha(fecha_cosido_str)
+    if not fecha_cosido:
+        return 0
+
+    hoy = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+    diferencia = (hoy - fecha_cosido).days
+
+    # Si la fecha de cosido ya pasó, devolver los días de atraso (positivo)
+    # Si aún no llegó, devolver 0
+    return max(0, diferencia)
+
+
+def calcular_urgencia(atraso, fecha_producto_final_str):
+    """
+    Calcula la urgencia basándose en:
+    - ALTA (1): Atrasado Y faltan menos de 7 días para producto final
+    - NORMAL (2): Atrasado Y faltan 7 días o más para producto final
+    - BAJA (3): NO está atrasado
+    """
+    # Si no está atrasado → BAJA
+    if atraso == 0:
+        return 3
+
+    # Si está atrasado, verificar días hasta producto final
+    fecha_producto_final = parsear_fecha(fecha_producto_final_str)
+    if not fecha_producto_final:
+        return 2  # Por defecto NORMAL si no hay fecha
+
+    hoy = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+    dias_hasta_final = (fecha_producto_final - hoy).days
+
+    # Atrasado + faltan menos de 7 días → ALTA
+    if dias_hasta_final < 7:
+        return 1
+
+    # Atrasado + faltan 7 días o más → NORMAL
+    return 2
+
+
 def procesar_datos(datos):
     for item in datos:
         item['FECHA_PRODUCTO_FINAL'] = convertir_fecha_excel(item.get('FECHA_PRODUCTO_FINAL', ''))
         item['FECHA_COSIDO'] = convertir_fecha_excel(item.get('FECHA_COSIDO', ''))
-        try:
-            item['ATRASO'] = int(item.get('ATRASO', 0))
-        except (ValueError, TypeError):
-            item['ATRASO'] = 0
+
+        # Calcular ATRASO basándose en FECHA_COSIDO
+        item['ATRASO'] = calcular_atraso_por_cosido(item.get('FECHA_COSIDO', ''))
+
+        # Calcular URGENCIA basándose en ATRASO y FECHA_PRODUCTO_FINAL
+        item['URGENCIA'] = calcular_urgencia(item['ATRASO'], item.get('FECHA_PRODUCTO_FINAL', ''))
+
         try:
             item['PENDIENTE'] = float(item.get('PENDIENTE', 0))
         except (ValueError, TypeError):
