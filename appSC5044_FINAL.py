@@ -777,7 +777,6 @@ else:
         })
         st.dataframe(df_display, use_container_width=True, height=600, hide_index=True)
     else:
-        else:
         # Vista agrupada JERÁRQUICA: FAMILIA → SKU → OT
         familias_grupos = {}
 
@@ -902,4 +901,4 @@ else:
 
                             st.markdown("---")
 
-    st.caption("SC5044 Production Management")
+st.caption("SC5044 Production Management")
