@@ -598,6 +598,16 @@ def formatear_badge_tipo(tipo):
         return '<span class="badge badge-personalizado">PERSONALIZADO</span>'
 
 
+def formatear_badge_urgencia(urgencia):
+    """Formatear badge de urgencia con colores"""
+    if urgencia == 1:
+        return '<span class="badge badge-rojo">🔴 URGENTE</span>'
+    elif urgencia == 2:
+        return '<span class="badge badge-naranja">🟠 NORMAL</span>'
+    else:
+        return '<span class="badge badge-verde">🟢 BAJA</span>'
+
+
 # Header
 st.markdown("""
 <div class="custom-header">
@@ -872,23 +882,33 @@ else:
                                 st.markdown(f"**OT:** {ot_numero}")
                                 st.markdown(formatear_badge_tipo(ot.get('TIPO', 'STOCK')), unsafe_allow_html=True)
                             with col2:
-                                c1, c2, c3, c4 = st.columns(4)
+                                # Primera fila: 3 columnas
+                                c1, c2, c3 = st.columns(3)
                                 with c1:
+                                    st.markdown("**📅 Fecha Cosido:**")
+                                    st.write(ot.get('FECHA_COSIDO', '-'))
+                                with c2:
                                     st.markdown("**📅 Fecha Final:**")
                                     st.write(ot.get('FECHA_PRODUCTO_FINAL', '-'))
-                                with c2:
+                                with c3:
                                     st.markdown("**📦 Pendiente:**")
                                     if unidades_fabricadas > 0:
                                         st.write(f"~~{int(pendiente_original):,}~~ → **{int(pendiente_real):,}** uds")
                                     else:
                                         st.write(f"{int(pendiente_original):,} uds")
-                                with c3:
+
+                                # Segunda fila: 3 columnas
+                                c4, c5, c6 = st.columns(3)
+                                with c4:
                                     st.markdown("**⏰ Atraso:**")
                                     st.write(f"{ot.get('ATRASO', 0)} días")
-                                with c4:
-                                    st.markdown("**🎨 Estado:**")
+                                with c5:
+                                    st.markdown("**🎨 Estado Corte:**")
                                     st.markdown(formatear_badge_estado(ot.get('CORTE_STATUS', 'naranja')),
                                                 unsafe_allow_html=True)
+                                with c6:
+                                    st.markdown("**🚨 Urgencia:**")
+                                    st.markdown(formatear_badge_urgencia(ot.get('URGENCIA', 3)), unsafe_allow_html=True)
 
                             # FORMULARIO DE FABRICACIÓN (Solo para usuario "produccion" o "admin")
                             if st.session_state.usuario in ["produccion", "admin"]:
