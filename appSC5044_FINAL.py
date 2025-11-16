@@ -9,7 +9,7 @@ st.set_page_config(
     page_title="Gestión de Producción SC5044",
     page_icon="📊",
     layout="wide",
-    initial_sidebar_state="collapsed"
+    initial_sidebar_state="expanded"  # Sidebar expandido por defecto
 )
 
 # CSS PERSONALIZADO MEJORADO - Diseño Moderno (Forzar tema claro)
@@ -22,6 +22,17 @@ st.markdown("""
 
     [data-testid="stHeader"] {
         background: transparent !important;
+    }
+
+    /* Sidebar mejorado */
+    [data-testid="stSidebar"] {
+        background: white !important;
+        border-right: 2px solid #e8ecf1 !important;
+        box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
+    }
+
+    [data-testid="stSidebar"] * {
+        color: #2d3436 !important;
     }
 
     /* Forzar colores claros en todos los textos */
@@ -399,6 +410,26 @@ def obtener_historial_fabricacion(ot):
     return []
 
 
+def eliminar_fabricacion_temporal():
+    """Eliminar el archivo de fabricación temporal"""
+    try:
+        if os.path.exists(RUTA_TEMPORAL):
+            os.remove(RUTA_TEMPORAL)
+            return True
+        return True
+    except Exception as e:
+        st.error(f"Error al eliminar: {str(e)}")
+        return False
+
+
+def obtener_estadisticas_fabricacion():
+    """Obtener estadísticas generales de fabricación temporal"""
+    datos_temp = cargar_fabricacion_temporal()
+    total_ots = len(datos_temp)
+    total_unidades = sum(item["unidades_fabricadas_total"] for item in datos_temp.values())
+    return total_ots, total_unidades
+
+
 def convertir_fecha_excel(numero_serial):
     try:
         if numero_serial == "" or numero_serial is None:
@@ -581,6 +612,39 @@ with col_logout2:
         st.rerun()
 
 st.markdown(f"👤 **Usuario:** {st.session_state.usuario}")
+
+# PANEL DE CONTROL ADMIN
+if st.session_state.usuario == "admin":
+    st.markdown("---")
+    st.markdown("### 🔧 Panel de Administración")
+
+    datos_temp = cargar_fabricacion_temporal()
+    if datos_temp:
+        total_ots_fab, total_uds_fab = obtener_estadisticas_fabricacion()
+
+        col_admin1, col_admin2, col_admin3 = st.columns(3)
+
+        with col_admin1:
+            st.info(f"📦 **{total_ots_fab}** OTs con fabricación registrada")
+
+        with col_admin2:
+            st.info(f"✅ **{total_uds_fab:,}** unidades fabricadas (temporal)")
+
+        with col_admin3:
+            if st.button("🗑️ Eliminar Datos Temporales", use_container_width=True, type="primary"):
+                if eliminar_fabricacion_temporal():
+                    st.success("✅ Datos temporales eliminados correctamente")
+                    st.rerun()
+                else:
+                    st.error("❌ Error al eliminar")
+
+        with st.expander("📊 Ver detalle de fabricaciones"):
+            for ot, datos in datos_temp.items():
+                st.markdown(
+                    f"**OT {ot}:** {datos['unidades_fabricadas_total']} uds - {len(datos['registros'])} registros")
+    else:
+        st.success("✅ No hay datos temporales de fabricación")
+
 st.markdown("---")
 
 # Cargar datos
@@ -593,77 +657,93 @@ familias = ["Todas"] + sorted(list(set([item.get('FAMILIA', '') for item in dato
 if 'prioridad' not in st.session_state:
     st.session_state.prioridad = "1"
 if 'vista' not in st.session_state:
-    st.session_state.vista = "Tabla"
+    st.session_state.vista = "Agrupada"  # Vista agrupada por defecto
 
-# FILTROS
-st.markdown('<div class="filter-container">', unsafe_allow_html=True)
-st.markdown("### 📅 Filtrar por Prioridad de Semana")
+# ============================================
+# SIDEBAR - FILTROS
+# ============================================
 
-col1, col2, col3 = st.columns(3)
-with col1:
-    if st.button("🔴 PRIORIDAD 1", use_container_width=True,
-                 type="primary" if st.session_state.prioridad == "1" else "secondary"):
-        st.session_state.prioridad = "1"
+with st.sidebar:
+    st.markdown("## 🔍 FILTROS")
+    st.markdown("---")
+
+    # Prioridad
+    st.markdown("### 📅 Prioridad")
+    prioridad_sel = st.radio(
+        "Selecciona prioridad:",
+        ["1", "2", "3"],
+        index=["1", "2", "3"].index(st.session_state.prioridad),
+        format_func=lambda x: f"{'🔴' if x == '1' else '🟠' if x == '2' else '🟡'} Prioridad {x}",
+        label_visibility="collapsed"
+    )
+    if prioridad_sel != st.session_state.prioridad:
+        st.session_state.prioridad = prioridad_sel
         st.rerun()
-with col2:
-    if st.button("🟠 PRIORIDAD 2", use_container_width=True,
-                 type="primary" if st.session_state.prioridad == "2" else "secondary"):
-        st.session_state.prioridad = "2"
-        st.rerun()
-with col3:
-    if st.button("🟡 PRIORIDAD 3", use_container_width=True,
-                 type="primary" if st.session_state.prioridad == "3" else "secondary"):
-        st.session_state.prioridad = "3"
-        st.rerun()
 
-st.markdown("---")
+    st.markdown("---")
 
-col1, col2, col3, col4 = st.columns(4)
-with col1:
-    estado_corte = st.selectbox("Estado Corte", ["Todos", "Rojo", "Verde", "Naranja"])
-with col2:
-    urgencia = st.selectbox("Urgencia", ["Todas", "1 Alta", "2 Normal"])
-with col3:
-    tipo = st.selectbox("Tipo", ["Todos", "STOCK", "PERSONALIZADO"])
-with col4:
-    familia = st.selectbox("Familia", familias)
+    # Estado Corte
+    st.markdown("### 🎨 Estado Corte")
+    estado_corte = st.selectbox("Estado:", ["Todos", "Rojo", "Verde", "Naranja"], label_visibility="collapsed")
 
-busqueda = st.text_input("🔍 Buscar por OT, SKU o descripción...")
+    # Urgencia
+    st.markdown("### ⚡ Urgencia")
+    urgencia = st.selectbox("Urgencia:", ["Todas", "1 Alta", "2 Normal"], label_visibility="collapsed")
+
+    # Tipo
+    st.markdown("### 📦 Tipo")
+    tipo = st.selectbox("Tipo:", ["Todos", "STOCK", "PERSONALIZADO"], label_visibility="collapsed")
+
+    # Familia
+    st.markdown("### 👕 Familia")
+    familia = st.selectbox("Familia:", familias, label_visibility="collapsed")
+
+    st.markdown("---")
+
+    # Búsqueda
+    st.markdown("### 🔍 Buscar")
+    busqueda = st.text_input("OT, SKU o descripción...", label_visibility="collapsed")
+
+    st.markdown("---")
+
+    # Botones de acción
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("🔄 Limpiar", use_container_width=True):
+            st.session_state.prioridad = "1"
+            st.rerun()
+    with col2:
+        if st.button("📦 Vista", use_container_width=True):
+            st.session_state.vista = "Agrupada" if st.session_state.vista == "Tabla" else "Tabla"
+            st.rerun()
+
+    # Exportar
+    if 'datos_filtrados' in locals() and len(datos_filtrados) > 0:
+        df = pd.DataFrame(datos_filtrados)
+        csv = df.to_csv(index=False).encode('utf-8-sig')
+        st.download_button(
+            "📥 Exportar CSV",
+            csv,
+            f"produccion_{datetime.now().strftime('%Y%m%d')}.csv",
+            "text/csv",
+            use_container_width=True
+        )
+
+# ============================================
+# CONTENIDO PRINCIPAL
+# ============================================
 
 # APLICAR FILTROS
 datos_filtrados = aplicar_filtros(datos, st.session_state.prioridad, estado_corte, urgencia, tipo, familia, busqueda)
 
-# Botones
-col1, col2, col3, col4 = st.columns(4)
-with col1:
-    st.button("🔍 Aplicar Filtros", use_container_width=True, type="primary")
-with col2:
-    if st.button("🔄 Limpiar", use_container_width=True):
-        st.session_state.prioridad = "1"
-        st.rerun()
-with col3:
-    if st.button("📦 Vista Agrupada" if st.session_state.vista == "Tabla" else "📋 Vista Tabla",
-                 use_container_width=True):
-        st.session_state.vista = "Agrupada" if st.session_state.vista == "Tabla" else "Tabla"
-        st.rerun()
-with col4:
-    if len(datos_filtrados) > 0:
-        df = pd.DataFrame(datos_filtrados)
-        csv = df.to_csv(index=False).encode('utf-8-sig')
-        st.download_button("📥 Exportar", csv, f"produccion_{datetime.now().strftime('%Y%m%d')}.csv", "text/csv",
-                           use_container_width=True)
-
-st.markdown('</div>', unsafe_allow_html=True)
-
-# ESTADÍSTICAS (después de filtros)
+# ESTADÍSTICAS ARRIBA (3 tarjetas)
 total_ots = len(datos_filtrados)
 total_pendiente = int(sum(float(item.get('PENDIENTE', 0)) for item in datos_filtrados))
 urgencias_count = len([item for item in datos_filtrados if item.get('URGENCIA') == 1])
-estado_rojo = len([item for item in datos_filtrados if item.get('CORTE_STATUS') == 'rojo'])
 
 st.markdown(f"""
-<div style="background: white; padding: 30px 40px; margin: 20px 0;">
-    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px;">
+<div style="background: white; padding: 30px 40px; margin: 0 0 30px 0; border-radius: 16px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);">
+    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
         <div class="stat-card">
             <h3>TOTAL OTS</h3>
             <div class="value">{total_ots:,}</div>
@@ -676,15 +756,10 @@ st.markdown(f"""
             <h3>URGENCIAS</h3>
             <div class="value">{urgencias_count}</div>
         </div>
-        <div class="stat-card">
-            <h3>ESTADO CORTE ROJO</h3>
-            <div class="value">{estado_rojo}</div>
-        </div>
     </div>
 </div>
 """, unsafe_allow_html=True)
 
-# MOSTRAR DATOS
 if len(datos_filtrados) == 0:
     st.warning("😕 No se encontraron resultados")
 else:
@@ -702,94 +777,129 @@ else:
         })
         st.dataframe(df_display, use_container_width=True, height=600, hide_index=True)
     else:
-        grupos = {}
+        else:
+        # Vista agrupada JERÁRQUICA: FAMILIA → SKU → OT
+        familias_grupos = {}
+
+        # Agrupar por FAMILIA primero
         for item in datos_filtrados:
+            familia_nombre = item.get('FAMILIA', 'SIN_FAMILIA')
             sku = item.get('SKU', 'SIN_SKU')
-            if sku not in grupos:
-                grupos[sku] = {'familia': item.get('FAMILIA', '-'), 'ots': [], 'total_pendiente': 0}
-            grupos[sku]['ots'].append(item)
-            grupos[sku]['total_pendiente'] += float(item.get('PENDIENTE', 0))
 
-        for sku, grupo in sorted(grupos.items(), key=lambda x: x[1]['total_pendiente'], reverse=True):
-            with st.expander(
-                    f"📦 {sku} | {grupo['familia']} | {len(grupo['ots'])} OTs | {int(grupo['total_pendiente']):,} uds"):
-                for idx, ot in enumerate(grupo['ots']):
-                    ot_numero = ot.get('OT', '-')
-                    pendiente_original = float(ot.get('PENDIENTE', 0))
-                    unidades_fabricadas = obtener_unidades_fabricadas(ot_numero)
-                    pendiente_real = max(0, pendiente_original - unidades_fabricadas)
+            if familia_nombre not in familias_grupos:
+                familias_grupos[familia_nombre] = {}
 
-                    col1, col2 = st.columns([1, 4])
-                    with col1:
-                        st.markdown(f"**OT:** {ot_numero}")
-                        st.markdown(formatear_badge_tipo(ot.get('TIPO', 'STOCK')), unsafe_allow_html=True)
-                    with col2:
-                        c1, c2, c3, c4 = st.columns(4)
-                        with c1:
-                            st.markdown("**📅 Fecha Final:**")
-                            st.write(ot.get('FECHA_PRODUCTO_FINAL', '-'))
-                        with c2:
-                            st.markdown("**📦 Pendiente:**")
-                            if unidades_fabricadas > 0:
-                                st.write(f"~~{int(pendiente_original):,}~~ → **{int(pendiente_real):,}** uds")
-                            else:
-                                st.write(f"{int(pendiente_original):,} uds")
-                        with c3:
-                            st.markdown("**⏰ Atraso:**")
-                            st.write(f"{ot.get('ATRASO', 0)} días")
-                        with c4:
-                            st.markdown("**🎨 Estado:**")
-                            st.markdown(formatear_badge_estado(ot.get('CORTE_STATUS', 'naranja')),
-                                        unsafe_allow_html=True)
+            if sku not in familias_grupos[familia_nombre]:
+                familias_grupos[familia_nombre][sku] = {
+                    'ots': [],
+                    'total_pendiente': 0
+                }
 
-                    # FORMULARIO DE FABRICACIÓN (Solo para usuario "produccion" o "admin")
-                    if st.session_state.usuario in ["produccion", "admin"]:
-                        st.markdown("---")
-                        st.markdown("### 🏭 Registrar Fabricación")
+            familias_grupos[familia_nombre][sku]['ots'].append(item)
+            familias_grupos[familia_nombre][sku]['total_pendiente'] += float(item.get('PENDIENTE', 0))
 
-                        col_form1, col_form2, col_form3 = st.columns([2, 1, 1])
+        # Mostrar por FAMILIA → SKU → OT
+        for familia_nombre in sorted(familias_grupos.keys()):
+            skus_en_familia = familias_grupos[familia_nombre]
+            total_ots_familia = sum(len(skus_en_familia[sku]['ots']) for sku in skus_en_familia)
+            total_pendiente_familia = sum(skus_en_familia[sku]['total_pendiente'] for sku in skus_en_familia)
 
-                        with col_form1:
-                            unidades_key = f"unidades_{ot_numero}_{idx}"
-                            unidades_fabricar = st.number_input(
-                                "Unidades fabricadas:",
-                                min_value=0,
-                                max_value=int(pendiente_real),
-                                value=0,
-                                step=1,
-                                key=unidades_key
-                            )
+            # NIVEL 1: FAMILIA
+            with st.expander(f"👕 {familia_nombre} | {total_ots_familia} OTs | {int(total_pendiente_familia):,} uds",
+                             expanded=False):
 
-                        with col_form2:
-                            if st.button(f"✅ Registrar", key=f"btn_registrar_{ot_numero}_{idx}",
-                                         use_container_width=True):
-                                if unidades_fabricar > 0:
-                                    if registrar_fabricacion(ot_numero, unidades_fabricar, st.session_state.usuario):
-                                        st.success(f"✅ {unidades_fabricar} uds registradas correctamente")
-                                        st.rerun()
+                # NIVEL 2: SKU dentro de la familia
+                for sku in sorted(skus_en_familia.keys(), key=lambda x: skus_en_familia[x]['total_pendiente'],
+                                  reverse=True):
+                    sku_data = skus_en_familia[sku]
+
+                    with st.expander(
+                            f"   📦 {sku} | {len(sku_data['ots'])} OTs | {int(sku_data['total_pendiente']):,} uds",
+                            expanded=False):
+
+                        # NIVEL 3: OTs dentro del SKU
+                        for idx, ot in enumerate(sku_data['ots']):
+                            ot_numero = ot.get('OT', '-')
+                            pendiente_original = float(ot.get('PENDIENTE', 0))
+                            unidades_fabricadas = obtener_unidades_fabricadas(ot_numero)
+                            pendiente_real = max(0, pendiente_original - unidades_fabricadas)
+
+                            col1, col2 = st.columns([1, 4])
+                            with col1:
+                                st.markdown(f"**OT:** {ot_numero}")
+                                st.markdown(formatear_badge_tipo(ot.get('TIPO', 'STOCK')), unsafe_allow_html=True)
+                            with col2:
+                                c1, c2, c3, c4 = st.columns(4)
+                                with c1:
+                                    st.markdown("**📅 Fecha Final:**")
+                                    st.write(ot.get('FECHA_PRODUCTO_FINAL', '-'))
+                                with c2:
+                                    st.markdown("**📦 Pendiente:**")
+                                    if unidades_fabricadas > 0:
+                                        st.write(f"~~{int(pendiente_original):,}~~ → **{int(pendiente_real):,}** uds")
                                     else:
-                                        st.error("❌ Error al registrar")
-                                else:
-                                    st.warning("⚠️ Debes ingresar unidades mayores a 0")
+                                        st.write(f"{int(pendiente_original):,} uds")
+                                with c3:
+                                    st.markdown("**⏰ Atraso:**")
+                                    st.write(f"{ot.get('ATRASO', 0)} días")
+                                with c4:
+                                    st.markdown("**🎨 Estado:**")
+                                    st.markdown(formatear_badge_estado(ot.get('CORTE_STATUS', 'naranja')),
+                                                unsafe_allow_html=True)
 
-                        with col_form3:
-                            historial = obtener_historial_fabricacion(ot_numero)
-                            if historial:
-                                if st.button(f"📜 Historial ({len(historial)})", key=f"btn_historial_{ot_numero}_{idx}",
-                                             use_container_width=True):
-                                    st.session_state[f"mostrar_historial_{ot_numero}"] = not st.session_state.get(
-                                        f"mostrar_historial_{ot_numero}", False)
+                            # FORMULARIO DE FABRICACIÓN (Solo para usuario "produccion" o "admin")
+                            if st.session_state.usuario in ["produccion", "admin"]:
+                                st.markdown("---")
+                                st.markdown("### 🏭 Registrar Fabricación")
 
-                        # Mostrar historial si está activado
-                        if st.session_state.get(f"mostrar_historial_{ot_numero}", False):
-                            st.markdown("#### 📜 Historial de Fabricación")
-                            for reg in reversed(historial):
-                                st.markdown(f"- **{reg['fecha']}** - {reg['unidades']} uds por *{reg['usuario']}*")
+                                col_form1, col_form2, col_form3 = st.columns([2, 1, 1])
 
-                        # Info para fabricadas
-                        if unidades_fabricadas > 0:
-                            st.info(f"ℹ️ Total fabricado (temporal): **{int(unidades_fabricadas):,}** uds")
+                                with col_form1:
+                                    unidades_key = f"unidades_{ot_numero}_{idx}_{familia_nombre}_{sku}"
+                                    unidades_fabricar = st.number_input(
+                                        "Unidades fabricadas:",
+                                        min_value=0,
+                                        max_value=int(pendiente_real),
+                                        value=0,
+                                        step=1,
+                                        key=unidades_key
+                                    )
 
-                    st.markdown("---")
+                                with col_form2:
+                                    if st.button(f"✅ Registrar",
+                                                 key=f"btn_registrar_{ot_numero}_{idx}_{familia_nombre}_{sku}",
+                                                 use_container_width=True):
+                                        if unidades_fabricar > 0:
+                                            if registrar_fabricacion(ot_numero, unidades_fabricar,
+                                                                     st.session_state.usuario):
+                                                st.success(f"✅ {unidades_fabricar} uds registradas correctamente")
+                                                st.rerun()
+                                            else:
+                                                st.error("❌ Error al registrar")
+                                        else:
+                                            st.warning("⚠️ Debes ingresar unidades mayores a 0")
 
-st.caption("SC5044 Production Management")
+                                with col_form3:
+                                    historial = obtener_historial_fabricacion(ot_numero)
+                                    if historial:
+                                        if st.button(f"📜 Historial ({len(historial)})",
+                                                     key=f"btn_historial_{ot_numero}_{idx}_{familia_nombre}_{sku}",
+                                                     use_container_width=True):
+                                            st.session_state[
+                                                f"mostrar_historial_{ot_numero}"] = not st.session_state.get(
+                                                f"mostrar_historial_{ot_numero}", False)
+
+                                # Mostrar historial si está activado
+                                if st.session_state.get(f"mostrar_historial_{ot_numero}", False):
+                                    st.markdown("#### 📜 Historial de Fabricación")
+                                    for reg in reversed(historial):
+                                        st.markdown(
+                                            f"- **{reg['fecha']}** - {reg['unidades']} uds por *{reg['usuario']}*")
+
+                                # Info para fabricadas
+                                if unidades_fabricadas > 0:
+                                    st.info(f"ℹ️ Total fabricado (temporal): **{int(unidades_fabricadas):,}** uds")
+
+                            st.markdown("---")
+
+    st.caption("SC5044 Production Management")
